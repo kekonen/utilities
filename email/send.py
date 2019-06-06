@@ -4,9 +4,62 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE, formatdate
+import argparse
+import os
 
+username = os.environ['GMAIL_USERNAME']
+password = os.environ['GMAIL_PASSWORD']
 
+parser = argparse.ArgumentParser(description='Send Gmail from command line')
 
+parser.add_argument('-f',
+                    metavar='from',
+                    type=str,
+                    default=username + '@gmail.com',
+                    help='Sender')
+
+parser.add_argument('-t',
+                    metavar='to',
+                    type=str,
+                    nargs='*',
+                    help='Receivers')
+
+parser.add_argument('-s',
+                    metavar='Subject',
+                    type=str,
+                    help='Subject')
+
+parser.add_argument('--files',
+                    metavar='files',
+                    type=str,
+                    nargs='*',
+                    help='Files to attach')
+
+parser.add_argument('--text',
+                    metavar='text',
+                    type=str,
+                    nargs='*',
+                    help='Files to attach')
+
+parser.add_argument('--tf',
+                    metavar='textfile',
+                    type=argparse.FileType('r', encoding='UTF-8'),
+                    help='File containing text for sending')
+
+args = parser.parse_args()
+
+send_from = args.f
+send_to = args.t
+subject = args.s
+files = args.files
+text = args.text
+
+if text and type(text) == list:
+    text = ' '.join(text)
+elif not text and args.tf:
+    text = args.tf.read()
+elif not text and not args.tf:
+    text = ''
 
 def multipart(send_from, send_to, subject, text, files=None):
     msg = MIMEMultipart()
@@ -23,14 +76,9 @@ def multipart(send_from, send_to, subject, text, files=None):
                 fil.read(),
                 Name=basename(f)
             )
-        # After the file is closed
         part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
         msg.attach(part)
 
-    
-    #smtp = smtplib.SMTP(server)
-    #smtp.sendmail(send_from, send_to, msg.as_string())
-    #smtp.close()
     return msg
 
 def send(send_from, send_to, username, password, msg):
@@ -42,10 +90,6 @@ def send(send_from, send_to, username, password, msg):
     server.quit()
 
 
-send_from = 'bnp.supplier@gmail.com'
-send_to = 'daniil@jcatalog.club'
-msg = 'Why,Oh why!'
-msg = multipart(send_from, [send_to], "This is my subject", "Hello world", ['kek.txt']) 
-username = 'bnp.supplier@gmail.com'
-password = '!Test1337'
+msg = multipart(send_from, send_to, subject, text, files) 
+
 send(send_from, send_to, username, password, msg)
