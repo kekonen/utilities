@@ -21,7 +21,7 @@ def read_email_from_gmail():
         mail.select('inbox')
         #typ, data = conn.search(None,'(UNSEEN SUBJECT "%s")' % subject)
 
-        type, data = mail.search(None, '(UNSEEN)') #All
+        type, data = mail.search(None, '(UNSEEN)') # 'All', '(UNSEEN SUBJECT "%s")' % subject
         mail_ids = data[0]
 
         id_list = mail_ids.split()   
